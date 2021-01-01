@@ -4,30 +4,29 @@ from enum import Enum
 from typing import List, Optional
 from copy import deepcopy
 
-CheckResult.correct = lambda: CheckResult(True, '')
+CheckResult.correct = lambda: CheckResult(True, "")
 CheckResult.wrong = lambda feedback: CheckResult(False, feedback)
 
 
 class FieldState(Enum):
-    X = 'X'
-    O = 'O'
-    FREE = ' '
+    X = "X"
+    O = "O"
+    FREE = " "
 
 
 def get_state(symbol):
-    if symbol == 'X':
+    if symbol == "X":
         return FieldState.X
-    elif symbol == 'O':
+    elif symbol == "O":
         return FieldState.O
-    elif symbol == ' ' or symbol == '_':
+    elif symbol == " " or symbol == "_":
         return FieldState.FREE
     else:
         return None
 
 
 class TicTacToeField:
-
-    def __init__(self, *, field: str = '', constructed=None):
+    def __init__(self, *, field: str = "", constructed=None):
 
         if constructed is not None:
             self.field = deepcopy(constructed)
@@ -39,7 +38,7 @@ class TicTacToeField:
 
             for row in range(3):
                 for col in range(3):
-                    index = (2 - row) * 3 + col
+                    index = row * 3 + col
                     self.field[row][col] = get_state(field[index])
 
     def equal_to(self, other) -> bool:
@@ -72,9 +71,7 @@ class TicTacToeField:
 
     def is_close_to(self, other) -> bool:
         return (
-            self.equal_to(other)
-            or self.has_next_as(other)
-            or other.has_next_as(self)
+            self.equal_to(other) or self.has_next_as(other) or other.has_next_as(self)
         )
 
     @staticmethod
@@ -82,23 +79,28 @@ class TicTacToeField:
 
         lines = field_str.splitlines()
         lines = [i.strip() for i in lines]
-        lines = [i for i in lines if
-                 i.startswith('|') and i.endswith('|')]
+        lines = [i for i in lines if i.startswith("|") and i.endswith("|")]
 
         for line in lines:
             if len(line) != 9:
                 raise WrongAnswerException(
                     f"Line of Tic-Tac-Toe field should be 9 characters long\n"
-                    f"found {len(line)} characters in \"{line}\"")
+                    f'found {len(line)} characters in "{line}"'
+                )
             for c in line:
-                if c not in 'XO|_ ':
+                if c not in "XO|_ ":
                     return None
 
         field: List[List[Optional[FieldState]]] = [
             [None for _ in range(3)] for _ in range(3)
         ]
 
-        y: int = 2
+        y: int = 0
+
+        if len(lines) != 3:
+            raise WrongAnswer(
+                f"Tic-Tac-Toe field should contain 3 rows, found {len(lines)}"
+            )
 
         for line in lines:
             cols = line[2], line[4], line[6]
@@ -107,9 +109,12 @@ class TicTacToeField:
                 state = get_state(c)
                 if state is None:
                     return None
-                field[y][x] = state
+                try:
+                    field[y][x] = state
+                except IndexError:
+                    pass
                 x += 1
-            y -= 1
+            y += 1
 
         return TicTacToeField(constructed=field)
 
@@ -121,97 +126,111 @@ class TicTacToeField:
         lines = [i.strip() for i in lines]
         lines = [i for i in lines if len(i) > 0]
 
-        candidate_field = ''
+        candidate_field = ""
         inside_field = False
         for line in lines:
-            if '----' in line and not inside_field:
+            if "----" in line and not inside_field:
                 inside_field = True
-                candidate_field = ''
-            elif '----' in line and inside_field:
+                candidate_field = ""
+            elif "----" in line and inside_field:
                 field = TicTacToeField.parse(candidate_field)
                 if field is not None:
                     fields += [field]
                 inside_field = False
 
-            if inside_field and line.startswith('|'):
-                candidate_field += line + '\n'
+            if inside_field and line.startswith("|"):
+                candidate_field += line + "\n"
 
         return fields
 
 
+inputs = ["1 1", "1 2", "1 3", "2 1", "2 2", "2 3", "3 1", "3 2", "3 3"]
+
+
+def iterate_cells(initial: str) -> str:
+    index: int = -1
+    for i in range(len(inputs)):
+        if initial == inputs[i]:
+            index = i
+            break
+
+    if index == -1:
+        return ""
+
+    full_input: str = ""
+    for i in range(index, index + 9):
+        full_input += inputs[i % len(inputs)] + "\n"
+
+    return full_input
+
+
 class TicTacToeTest(StageTest):
     def generate(self) -> List[TestCase]:
-        tests: List[TestCase] = [
-            TestCase(stdin="XXXOO__O_", attach=("XXXOO__O_", "X wins")),
-            TestCase(stdin="XOXOXOXXO", attach=("XOXOXOXXO", "X wins")),
-            TestCase(stdin="XOOOXOXXO", attach=("XOOOXOXXO", "O wins")),
-            TestCase(stdin="XOXOOXXXO", attach=("XOXOOXXXO", "Draw")),
-            TestCase(stdin="XO_OOX_X_", attach=("XO_OOX_X_", "Game not finished")),
-            TestCase(stdin="XO_XO_XOX", attach=("XO_XO_XOX", "Impossible")),
-            TestCase(stdin="_O_X__X_X", attach=("_O_X__X_X", "Impossible")),
-            TestCase(stdin="_OOOO_X_X", attach=("_OOOO_X_X", "Impossible"))
-        ]
+        tests: List[TestCase] = []
+
+        i: int = 0
+
+        start_fields = ("_XXOO_OX_", "_________", "X_X_O____")
+
+        for start_field in start_fields:
+            for input in inputs:
+                full_input = iterate_cells(input)
+
+                str_nums = input.split()
+                x = int(str_nums[0])
+                y = int(str_nums[1])
+
+                if i % 2 == 1:
+                    full_input = f"4 {i}\n" + full_input
+
+                tests += [
+                    TestCase(
+                        stdin=start_field + "\n" + full_input,
+                        attach=(start_field, x, y),
+                    )
+                ]
+
+                i += 1
+
         return tests
 
     def check(self, reply: str, attach: str) -> CheckResult:
 
-        clue_input, clue_result = attach
+        clue_input, clue_x, clue_y = attach
 
         fields = TicTacToeField.parse_all(reply)
 
-        if len(fields) == 0:
+        if len(fields) != 2:
             return CheckResult.wrong(
-                "Can't parse the field! "
-                "Check if you output a field "
-                "in format like in the example."
+                f"You should output exactly 2 fields, found: {len(fields)}"
             )
 
-        if len(fields) > 1:
+        curr: TicTacToeField = fields[0]
+        next: TicTacToeField = fields[1]
+
+        correct_curr = TicTacToeField(field=clue_input)
+        correct_next = TicTacToeField(constructed=correct_curr.field)
+
+        num_inputs = iterate_cells(f"{clue_x} {clue_y}").split("\n")
+
+        for input in num_inputs:
+            str_nums = input.split()
+            x = int(str_nums[0])
+            y = int(str_nums[1])
+            if correct_next.field[x - 1][y - 1] == FieldState.FREE:
+                correct_next.field[x - 1][y - 1] = FieldState.X
+                break
+
+        if not curr.equal_to(correct_curr):
+            return CheckResult.wrong("The first field is not equal to the input field")
+
+        if not next.equal_to(correct_next):
             return CheckResult.wrong(
-                "There are more than one field in the output! "
-                "You should output a single field."
-            )
-
-        user_field = fields[0]
-        input_field = TicTacToeField(field=clue_input)
-
-        if not user_field.equal_to(input_field):
-            return CheckResult.wrong(
-                "Your field doesn't match expected field"
-            )
-
-        lines = reply.splitlines()
-        lines = [i.strip() for i in lines]
-        lines = [i for i in lines if len(i) > 0]
-
-        last_line = lines[-1]
-
-        outcomes = [
-            "X wins",
-            "O wins",
-            "Draw",
-            "Game not finished",
-            "Impossible"
-        ]
-
-        if last_line not in outcomes:
-            return CheckResult.wrong(
-                "Can't parse result, "
-                "should be one of the outcomes mentioned in description. "
-                "\nYour last line: \"" + last_line + "\""
-            )
-
-        if last_line != clue_result:
-            return CheckResult.wrong(
-                "The result is incorrect. " +
-                "\nShould be: \"" + clue_result + "\", " +
-                "\nfound: \"" + last_line + "\". " +
-                "\nCheck if your program works correctly "
-                "in test examples in description."
+                "The first field is correct, but the second is not"
             )
 
         return CheckResult.correct()
 
 
-if __name__ == '__main__':
-    TicTacToeTest('tictactoe.tictactoe').run_tests()
+if __name__ == "__main__":
+    TicTacToeTest("tictactoe.tictactoe").run_tests()
