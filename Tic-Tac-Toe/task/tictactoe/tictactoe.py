@@ -1,35 +1,86 @@
-cells = input("Enter cells:")
-c = list(cells)
-print("---------")
-print("|", " ".join(c[:3]), "|", sep=" ")
-print("|", " ".join(c[3:6]), "|", sep=" ")
-print("|", " ".join(c[6:]), "|", sep=" ")
-print("---------")
+# Initiate the game, make a clean board
+current_board = "_" * 9
+move_count = 0
 
-# Make an array of possible winning positions
-win_pos = [
-    c[0] + c[1] + c[2],
-    c[0] + c[3] + c[6],
-    c[0] + c[4] + c[8],
-    c[2] + c[4] + c[6],
-    c[2] + c[4] + c[6],
-    c[2] + c[5] + c[8],
-    c[6] + c[7] + c[8],
-    c[1] + c[4] + c[7],
-    c[3] + c[4] + c[5],
-]
 
-empty_cell = "_" in c
-count_x = c.count("X")
-count_o = c.count("O")
+def print_board(board):
+    print("---------")
+    print("|", " ".join(board[:3]), "|", sep=" ")
+    print("|", " ".join(board[3:6]), "|", sep=" ")
+    print("|", " ".join(board[6:]), "|", sep=" ")
+    print("---------")
 
-if ("XXX" in win_pos and "OOO" in win_pos) or abs(count_x - count_o) > 1:
-    print("Impossible")
-elif "OOO" in win_pos:
-    print("O wins")
-elif "XXX" in win_pos:
-    print("X wins")
-elif empty_cell:
-    print("Game not finished")
-else:
-    print("Draw")
+
+def game_result(board):
+    """If the game is finished, return the result, else return Not finished"""
+
+    # Make an array of possible winning positions
+    winning_pos = [
+        board[0] + board[1] + board[2],
+        board[0] + board[3] + board[6],
+        board[0] + board[4] + board[8],
+        board[2] + board[4] + board[6],
+        board[2] + board[4] + board[6],
+        board[2] + board[5] + board[8],
+        board[6] + board[7] + board[8],
+        board[1] + board[4] + board[7],
+        board[3] + board[4] + board[5],
+    ]
+
+    empty_cell = "_" in board
+    count_x = board.count("X")
+    count_o = board.count("O")
+
+    if ("XXX" in winning_pos and "OOO" in winning_pos) or abs(count_x - count_o) > 1:
+        return "Impossible"
+    elif "OOO" in winning_pos:
+        return "O wins"
+    elif "XXX" in winning_pos:
+        return "X wins"
+    elif empty_cell:
+        return "Not finished"
+    else:
+        return "Draw"
+
+
+def find_position(coordinate):
+    return 3 * (coordinate[0] - 1) + coordinate[1] - 1
+
+
+def is_valid_move(move, board):
+    coordinate = move.split()
+    if not move.replace(" ", "").isnumeric():
+        print("You should enter numbers!")
+        return False
+    n = [int(i) for i in coordinate]
+    for i in n:
+        if i < 1 or i > 3:
+            print("Coordinates should be from 1 to 3!")
+            return False
+    if board[find_position(n)] != "_":
+        print("This cell is occupied! Choose another one!")
+        return False
+    return True
+
+
+def make_move(player, move, board):
+    moves = [int(i) for i in move.split()]
+    cells = list(board)
+    cells[find_position(moves)] = player
+    return "".join(cells)
+
+
+print_board(current_board)
+while game_result(current_board) == "Not finished":
+    while True:
+        next_move = input("Enter the coordinates:")
+        if is_valid_move(next_move, current_board):
+            break
+
+    current_board = make_move(
+        "X" if move_count % 2 == 0 else "O", next_move, current_board
+    )
+    move_count += 1
+    print_board(current_board)
+
+print(game_result(current_board))
