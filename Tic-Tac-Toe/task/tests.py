@@ -4,30 +4,29 @@ from enum import Enum
 from typing import List, Optional
 from copy import deepcopy
 
-CheckResult.correct = lambda: CheckResult(True, '')
+CheckResult.correct = lambda: CheckResult(True, "")
 CheckResult.wrong = lambda feedback: CheckResult(False, feedback)
 
 
 class FieldState(Enum):
-    X = 'X'
-    O = 'O'
-    FREE = ' '
+    X = "X"
+    O = "O"
+    FREE = " "
 
 
 def get_state(symbol):
-    if symbol == 'X':
+    if symbol == "X":
         return FieldState.X
-    elif symbol == 'O':
+    elif symbol == "O":
         return FieldState.O
-    elif symbol == ' ' or symbol == '_':
+    elif symbol == " " or symbol == "_":
         return FieldState.FREE
     else:
         return None
 
 
 class TicTacToeField:
-
-    def __init__(self, *, field: str = '', constructed=None):
+    def __init__(self, *, field: str = "", constructed=None):
 
         if constructed is not None:
             self.field = deepcopy(constructed)
@@ -75,9 +74,7 @@ class TicTacToeField:
 
     def is_close_to(self, other) -> bool:
         return (
-            self.equal_to(other)
-            or self.has_next_as(other)
-            or other.has_next_as(self)
+            self.equal_to(other) or self.has_next_as(other) or other.has_next_as(self)
         )
 
     def is_winning(self, side: FieldState):
@@ -85,23 +82,23 @@ class TicTacToeField:
             return False
 
         for i in 1, 2, 3:
-            if (self.get(i, 1) == side and
-                self.get(i, 2) == side and
-                self.get(i, 3) == side):
+            if (
+                self.get(i, 1) == side
+                and self.get(i, 2) == side
+                and self.get(i, 3) == side
+            ):
                 return True
-            if (self.get(1, i) == side and
-                self.get(2, i) == side and
-                self.get(3, i) == side):
+            if (
+                self.get(1, i) == side
+                and self.get(2, i) == side
+                and self.get(3, i) == side
+            ):
                 return True
 
-        if (self.get(1, 1) == side and
-            self.get(2, 2) == side and
-            self.get(3, 3) == side):
+        if self.get(1, 1) == side and self.get(2, 2) == side and self.get(3, 3) == side:
             return True
 
-        if (self.get(1, 3) == side and
-            self.get(2, 2) == side and
-            self.get(3, 1) == side):
+        if self.get(1, 3) == side and self.get(2, 2) == side and self.get(3, 1) == side:
             return True
 
     def is_draw(self):
@@ -118,16 +115,16 @@ class TicTacToeField:
 
         lines = field_str.splitlines()
         lines = [i.strip() for i in lines]
-        lines = [i for i in lines if
-                 i.startswith('|') and i.endswith('|')]
+        lines = [i for i in lines if i.startswith("|") and i.endswith("|")]
 
         for line in lines:
             if len(line) != 9:
                 raise WrongAnswerException(
                     f"Line of Tic-Tac-Toe field should be 9 characters long\n"
-                    f"found {len(line)} characters in \"{line}\"")
+                    f'found {len(line)} characters in "{line}"'
+                )
             for c in line:
-                if c not in 'XO|_ ':
+                if c not in "XO|_ ":
                     return None
 
         field: List[List[Optional[FieldState]]] = [
@@ -157,29 +154,25 @@ class TicTacToeField:
         lines = [i.strip() for i in lines]
         lines = [i for i in lines if len(i) > 0]
 
-        candidate_field = ''
+        candidate_field = ""
         inside_field = False
         for line in lines:
-            if '----' in line and not inside_field:
+            if "----" in line and not inside_field:
                 inside_field = True
-                candidate_field = ''
-            elif '----' in line and inside_field:
+                candidate_field = ""
+            elif "----" in line and inside_field:
                 field = TicTacToeField.parse(candidate_field)
                 if field is not None:
                     fields += [field]
                 inside_field = False
 
-            if inside_field and line.startswith('|'):
-                candidate_field += line + '\n'
+            if inside_field and line.startswith("|"):
+                candidate_field += line + "\n"
 
         return fields
 
 
-inputs = [
-    "1 1", "1 2", "1 3",
-    "2 1", "2 2", "2 3",
-    "3 1", "3 2", "3 3"
-]
+inputs = ["1 1", "1 2", "1 3", "2 1", "2 2", "2 3", "3 1", "3 2", "3 3"]
 
 
 def iterate_cells(initial: str) -> str:
@@ -190,11 +183,11 @@ def iterate_cells(initial: str) -> str:
             break
 
     if index == -1:
-        return ''
+        return ""
 
-    full_input: str = ''
+    full_input: str = ""
     for i in range(index, index + 9):
-        full_input += inputs[i % len(inputs)] + '\n'
+        full_input += inputs[i % len(inputs)] + "\n"
 
     return full_input
 
@@ -212,18 +205,13 @@ class TicTacToeTest(StageTest):
             y = int(str_nums[1])
 
             if i % 2 == 1:
-                full_move_input = f'4 {i}\n' + full_move_input
+                full_move_input = f"4 {i}\n" + full_move_input
 
-            full_game_input = ''
+            full_game_input = ""
             for _ in range(9):
                 full_game_input += full_move_input
 
-            tests += [
-                TestCase(
-                    stdin=full_game_input,
-                    attach=(x, y)
-                )
-            ]
+            tests += [TestCase(stdin=full_game_input, attach=(x, y))]
 
             i += 1
 
@@ -236,9 +224,7 @@ class TicTacToeTest(StageTest):
         fields = TicTacToeField.parse_all(reply)
 
         if len(fields) == 0:
-            return CheckResult.wrong(
-                "No fields found"
-            )
+            return CheckResult.wrong("No fields found")
 
         for i in range(1, len(fields)):
             curr: TicTacToeField = fields[i - 1]
@@ -249,74 +235,90 @@ class TicTacToeTest(StageTest):
 
             if not (stayed or improved):
                 return CheckResult.wrong(
-                    "For two fields following each " +
-                    "other one is not a continuation " +
-                    "of the other (they differ more than in two places)."
+                    "For two fields following each "
+                    + "other one is not a continuation "
+                    + "of the other (they differ more than in two places)."
                 )
 
         lines = reply.splitlines()
         last_line = lines[-1]
 
-        if not ('X wins' in last_line or 'O wins' in last_line or 'Draw' in last_line):
+        if not ("X wins" in last_line or "O wins" in last_line or "Draw" in last_line):
             return CheckResult.wrong(
-                "Can't parse final result, " +
-                "should contain \"Draw\", \"X wins\" or \"O wins\".\n" +
-                "Your last line: \"" + last_line + "\""
+                "Can't parse final result, "
+                + 'should contain "Draw", "X wins" or "O wins".\n'
+                + 'Your last line: "'
+                + last_line
+                + '"'
             )
 
-        if 'X wins' in last_line and 'O wins' in last_line:
+        if "X wins" in last_line and "O wins" in last_line:
             return CheckResult.wrong(
-                "Your final result contains \"X wins\" and \"O wins\" " +
-                "at the same time. This is impossible.\n" +
-                "Your last line: \"" + last_line + "\""
+                'Your final result contains "X wins" and "O wins" '
+                + "at the same time. This is impossible.\n"
+                + 'Your last line: "'
+                + last_line
+                + '"'
             )
 
-        if 'X wins' in last_line and 'Draw' in last_line:
+        if "X wins" in last_line and "Draw" in last_line:
             return CheckResult.wrong(
-                "Your final result contains \"X wins\" and \"Draw\" " +
-                "at the same time. This is impossible.\n" +
-                "Your last line: \"" + last_line + "\""
+                'Your final result contains "X wins" and "Draw" '
+                + "at the same time. This is impossible.\n"
+                + 'Your last line: "'
+                + last_line
+                + '"'
             )
 
-        if 'O wins' in last_line and 'Draw' in last_line:
+        if "O wins" in last_line and "Draw" in last_line:
             return CheckResult.wrong(
-                "Your final result contains \"O wins\" and \"Draw\" " +
-                "at the same time. This is impossible.\n" +
-                "Your last line: \"" + last_line + "\""
+                'Your final result contains "O wins" and "Draw" '
+                + "at the same time. This is impossible.\n"
+                + 'Your last line: "'
+                + last_line
+                + '"'
             )
 
         last_field: TicTacToeField = fields[-1]
 
-        if last_field.is_winning(FieldState.X) and 'X wins' not in last_line:
+        if last_field.is_winning(FieldState.X) and "X wins" not in last_line:
             return CheckResult.wrong(
-                "Your last field shows that X wins, " +
-                "and your last line should contain \"X wins\".\n" +
-                "Your last line: \"" + last_line + "\""
+                "Your last field shows that X wins, "
+                + 'and your last line should contain "X wins".\n'
+                + 'Your last line: "'
+                + last_line
+                + '"'
             )
 
-        if last_field.is_winning(FieldState.O) and 'O wins' not in last_line:
+        if last_field.is_winning(FieldState.O) and "O wins" not in last_line:
             return CheckResult.wrong(
-                "Your last field shows that O wins, " +
-                "and your last line should contain \"O wins\".\n" +
-                "Your last line: \"" + last_line + "\""
+                "Your last field shows that O wins, "
+                + 'and your last line should contain "O wins".\n'
+                + 'Your last line: "'
+                + last_line
+                + '"'
             )
 
-        if last_field.is_draw() and 'Draw' not in last_line:
+        if last_field.is_draw() and "Draw" not in last_line:
             return CheckResult.wrong(
-                "Your last field shows that there is a draw, " +
-                "and your last line should contain \"Draw\".\n" +
-                "Your last line: \"" + last_line + "\""
+                "Your last field shows that there is a draw, "
+                + 'and your last line should contain "Draw".\n'
+                + 'Your last line: "'
+                + last_line
+                + '"'
             )
 
-        if (last_field.is_winning(FieldState.X) or
-            last_field.is_winning(FieldState.O) or last_field.is_draw()):
+        if (
+            last_field.is_winning(FieldState.X)
+            or last_field.is_winning(FieldState.O)
+            or last_field.is_draw()
+        ):
             return CheckResult.correct()
 
         return CheckResult.wrong(
-            "Your last field contains unfinished game, "
-            "the game should be finished!"
+            "Your last field contains unfinished game, " "the game should be finished!"
         )
 
 
-if __name__ == '__main__':
-    TicTacToeTest('tictactoe.tictactoe').run_tests()
+if __name__ == "__main__":
+    TicTacToeTest("tictactoe.tictactoe").run_tests()
